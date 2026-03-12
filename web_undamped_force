@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Undamped forced vibration · interactive lab</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #f6f9fc 0%, #eef2f5 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .card {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 2.5rem;
+            box-shadow: 0 30px 50px -20px rgba(0,20,40,0.3), inset 0 0 0 1px rgba(255,255,255,0.7);
+            padding: 2rem 2rem 2.5rem 2rem;
+        }
+        h1 {
+            font-weight: 600;
+            font-size: 2.2rem;
+            letter-spacing: -0.01em;
+            margin-top: 0.2rem;
+            margin-bottom: 1rem;
+            color: #1a2b3e;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        h1 span {
+            background: #1e2f41;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            margin-left: 1rem;
+            vertical-align: middle;
+            box-shadow: inset 0 -1px 0 #3a4f64;
+        }
+        .subtitle {
+            font-size: 1rem;
+            color: #2c4058;
+            margin-bottom: 2rem;
+            border-left: 4px solid #3e6b8c;
+            padding-left: 1rem;
+            background: rgba(62, 107, 140, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1.2fr 1.9fr;
+            gap: 2rem;
+        }
+        @media (max-width: 800px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+        /* left panel – calculator */
+        .calc-panel {
+            background: rgba(255,255,255,0.5);
+            border-radius: 2rem;
+            padding: 1.8rem 1.8rem 2rem 1.8rem;
+            box-shadow: 0 6px 18px rgba(0,20,30,0.1);
+            border: 1px solid rgba(255,255,255,0.6);
+            backdrop-filter: blur(6px);
+        }
+        .formula-badge {
+            background: #1e3b4f;
+            color: white;
+            border-radius: 100px;
+            padding: 0.5rem 1.2rem;
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 1.8rem;
+            box-shadow: 0 8px 12px -6px #0e2a38;
+            border: 1px solid #5885a2;
+        }
+        .formula-badge sub {
+            font-size: 0.7rem;
+            vertical-align: sub;
+        }
+        .input-group {
+            margin-bottom: 1.8rem;
+        }
+        .input-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px dashed #b3c9d8;
+            padding: 0.6rem 0;
+        }
+        .input-row label {
+            font-weight: 500;
+            color: #163440;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .input-row label i {
+            font-style: normal;
+            color: #2c5777;
+            font-weight: 600;
+        }
+        .input-row input {
+            width: 120px;
+            padding: 0.5rem 0.8rem;
+            border: none;
+            background: rgba(255,255,255,0.9);
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 1rem;
+            text-align: right;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.03), 0 0 0 2px rgba(108, 156, 194, 0.2);
+            transition: 0.15s;
+            border: 1px solid white;
+        }
+        .input-row input:focus {
+            outline: none;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05), 0 0 0 3px #548ca0;
+            border-color: #d7e9ff;
+        }
+        .unit {
+            color: #3c627c;
+            font-size: 0.9rem;
+            margin-left: 0.4rem;
+            font-weight: 400;
+        }
+        .result-card {
+            background: #dfeef9;
+            border-radius: 1.5rem;
+            padding: 1.5rem 1.8rem;
+            margin: 2rem 0 1.5rem 0;
+            box-shadow: inset 0 1px 5px #bdd6e8, 0 8px 12px -12px #214252;
+        }
+        .result-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #265269;
+            opacity: 0.8;
+        }
+        .result-value {
+            font-size: 2.6rem;
+            font-weight: 650;
+            line-height: 1.2;
+            color: #003349;
+            display: flex;
+            align-items: baseline;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .result-value small {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #1b4f6e;
+        }
+        .result-desc {
+            color: #1b4f63;
+            font-weight: 400;
+            margin-top: 0.2rem;
+            font-size: 0.95rem;
+        }
+        .force-badge {
+            background: #2a4b67;
+            color: white;
+            padding: 0.2rem 1rem;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+        /* animation panel */
+        .animation-panel {
+            background: rgba(240, 249, 255, 0.6);
+            border-radius: 2rem;
+            padding: 1.8rem 1.5rem 1.5rem 1.5rem;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.8);
+            display: flex;
+            flex-direction: column;
+        }
+        .canvas-container {
+            background: #dcebf5;
+            border-radius: 1.8rem;
+            padding: 1rem;
+            box-shadow: inset 0 2px 10px #b6cfdf, 0 10px 20px -8px #1d3e52;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #f6fbfe;
+            border-radius: 1.2rem;
+            box-shadow: 0 5px 20px rgba(0,30,50,0.2);
+            cursor: pointer;
+        }
+        .anim-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0 0.2rem 0;
+        }
+        .freq-indicator {
+            background: #194354;
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .legend {
+            display: flex;
+            gap: 1.2rem;
+            font-size: 0.8rem;
+            color: #1e445b;
+            font-weight: 500;
+            align-items: center;
+        }
+        .legend span::before {
+            content: "●";
+            margin-right: 4px;
+            font-size: 1.2rem;
+            vertical-align: middle;
+            color: #226688;
+        }
+        .legend .force-leg::before {
+            color: #c3324b;
+        }
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1.2rem;
+        }
+        .btn {
+            background: white;
+            border: none;
+            padding: 0.6rem 1.4rem;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #1a4055;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            border: 1px solid #bed6e8;
+            transition: all 0.1s;
+            cursor: pointer;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        .btn-primary {
+            background: #285e7c;
+            color: white;
+            border: none;
+            box-shadow: 0 10px 15px -12px #0e3448;
+            border: 1px solid #4790b5;
+        }
+        .btn-primary:hover {
+            background: #1e4f6b;
+        }
+        .btn:hover {
+            background: #e9f2f8;
+            transform: scale(0.98);
+        }
+        .footnote {
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            color: #406e84;
+            text-align: center;
+            border-top: 1px solid #bfd8e9;
+            padding-top: 1.2rem;
+        }
+        .highlight {
+            background: #f2ffdf;
+            padding: 0.1rem 0.3rem;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>⚙️ undamped forced vibration <span>F₀ · cos(ωt)</span></h1>
+    <div class="subtitle">steady‑state amplitude & transient animation · mass–spring under sinusoidal force</div>
+
+    <div class="dashboard">
+        <!-- left: formula + calculator -->
+        <div class="calc-panel">
+            <div class="formula-badge">
+                X = F₀ / (k - m·ω²) &nbsp;&nbsp; <sub style="font-size:0.8rem;">(ω ≠ ωₙ)</sub>
+            </div>
+            <div class="input-group">
+                <div class="input-row">
+                    <label><i>m</i> mass</label>
+                    <input type="number" id="mass" value="2.4" step="0.1" min="0.3">
+                    <span class="unit">kg</span>
+                </div>
+                <div class="input-row">
+                    <label><i>k</i> stiffness</label>
+                    <input type="number" id="stiffness" value="18.5" step="0.5" min="1">
+                    <span class="unit">N/m</span>
+                </div>
+                <div class="input-row">
+                    <label><i>F₀</i> force ampl.</label>
+                    <input type="number" id="forceAmp" value="6.0" step="0.2" min="0">
+                    <span class="unit">N</span>
+                </div>
+                <div class="input-row">
+                    <label><i>ω</i> driving freq.</label>
+                    <input type="number" id="omega" value="2.2" step="0.1" min="0.1">
+                    <span class="unit">rad/s</span>
+                </div>
+            </div>
+
+            <!-- real‑time result block -->
+            <div class="result-card" id="resultBox">
+                <div class="result-title">AMPLITUDE X (steady state)</div>
+                <div class="result-value" id="ampValue">0.000 <small>m</small></div>
+                <div class="result-desc" id="dynDesc"> ∣F₀/(k−mω²)∣ &nbsp; mechanical reactance</div>
+                <div class="force-badge" id="forceFlag">⚡ forcing in phase</div>
+            </div>
+
+            <!-- quick info / formula detail -->
+            <div style="background: #d7e5f1; border-radius: 1rem; padding: 1rem;">
+                <p style="margin:0 0 0.3rem; font-weight:600; color: #1e4f66;">📐 governing equation</p>
+                <p style="margin:0; font-family: monospace; font-size:1rem;">m·x″ + k·x = F₀·cos(ωt)</p>
+                <p style="margin:0.5rem 0 0; font-size:0.85rem;">particular solution: xₚ = <span style="background:#bddbeb; padding:2px 6px;">X·cos(ωt)</span><br>X = F₀/(k − mω²)  (if ω ≠ ωₙ = √(k/m))</p>
+            </div>
+        </div>
+
+        <!-- right: animation -->
+        <div class="animation-panel">
+            <div class="canvas-container">
+                <canvas id="oscCanvas" width="500" height="200"></canvas>
+            </div>
+            <div class="anim-label">
+                <div class="legend">
+                    <span>displacement x(t)</span>
+                    <span class="force-leg">excitation F(t)</span>
+                </div>
+                <div class="freq-indicator" id="freqRatio">ω/ωₙ = 0.83</div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" id="playPauseBtn">⏸ pause</button>
+                <button class="btn" id="resetPhaseBtn">⟲ reset phase</button>
+                <button class="btn btn-primary" id="snapToNatural">ω → ωₙ (resonance preview)</button>
+            </div>
+            <div class="footnote">
+                ⚠️ undamped → if ω = ωₙ amplitude grows linearly (resonance).<br> 
+                formula gives infinite; animation shows beating/divergence.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // DOM elements
+        const massInp = document.getElementById('mass');
+        const stiffnessInp = document.getElementById('stiffness');
+        const forceAmpInp = document.getElementById('forceAmp');
+        const omegaInp = document.getElementById('omega');
+        const ampValueDiv = document.getElementById('ampValue');
+        const dynDesc = document.getElementById('dynDesc');
+        const forceFlag = document.getElementById('forceFlag');
+        const freqRatioSpan = document.getElementById('freqRatio');
+
+        const canvas = document.getElementById('oscCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width, height = canvas.height;
+
+        // animation state
+        let time = 0.0;
+        let paused = false;
+        const dt = 0.08; // time step per frame (rad)
+
+        // helper to compute values
+        function computeAmplitude(m, k, F0, omega) {
+            const denom = k - m * omega * omega;
+            if (Math.abs(denom) < 1e-9) return Infinity;  // resonance
+            return F0 / denom;
+        }
+
+        function getParams() {
+            const m = parseFloat(massInp.value) || 2.4;
+            const k = parseFloat(stiffnessInp.value) || 18.5;
+            const F0 = parseFloat(forceAmpInp.value) || 6.0;
+            const omega = parseFloat(omegaInp.value) || 2.2;
+            return { m, k, F0, omega };
+        }
+
+        // update result panel and return useful values
+        function refreshResult() {
+            const { m, k, F0, omega } = getParams();
+            const denom = k - m * omega * omega;
+            const omegaN = Math.sqrt(k / m);
+            const ratio = omega / omegaN;
+
+            let amp = 0, absAmp = 0, sign = 1;
+            let isResonance = false;
+            let descText = '';
+
+            if (Math.abs(denom) < 1e-9) {
+                isResonance = true;
+                amp = Infinity;
+                absAmp = Infinity;
+                descText = '⚠️ resonance (ω = ωₙ) — amplitude grows linearly';
+                forceFlag.innerText = '🔥 resonance';
+            } else {
+                amp = F0 / denom;        // signed amplitude (phase: positive = in phase, negative = out of phase)
+                absAmp = Math.abs(amp);
+                sign = Math.sign(amp);
+                if (sign > 0) {
+                    forceFlag.innerText = '🔄 force & displacement in phase';
+                } else {
+                    forceFlag.innerText = '↶ force & displacement opposite phase';
+                }
+                descText = `X = ${absAmp.toFixed(4)} m  ${sign>0 ? '(in‑phase)' : '(opposition)'}`;
+            }
+
+            // update amp display
+            if (!isFinite(absAmp) || isResonance) {
+                ampValueDiv.innerHTML = '∞ <small>resonance</small>';
+                dynDesc.innerText = 'denominator zero → unbounded';
+            } else {
+                ampValueDiv.innerHTML = `${absAmp.toFixed(4)} <small>m</small>`;
+                dynDesc.innerText = `X = F₀/|k−mω²| = ${absAmp.toFixed(4)} m  (${sign>0 ? 'pos' : 'neg'})`;
+            }
+
+            freqRatioSpan.innerText = `ω/ωₙ = ${ratio.toFixed(3)}`;
+
+            return { m, k, F0, omega, denom, omegaN, ratio, amp, absAmp, sign, isResonance };
+        }
+
+        // drawing & animation update
+        function drawCanvas() {
+            const { m, k, F0, omega, omegaN, ratio, amp, sign, isResonance } = refreshResult(); // get latest params
+
+            // clear with subtle grid
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#f6fbfe';
+            ctx.fillRect(0, 0, width, height);
+
+            // draw light grid
+            ctx.strokeStyle = '#bbd4e5';
+            ctx.lineWidth = 0.5;
+            for (let y = 40; y < height; y += 30) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.strokeStyle = '#d7e2ec';
+                ctx.stroke();
+            }
+            for (let x = 50; x < width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.strokeStyle = '#d7e2ec';
+                ctx.stroke();
+            }
+
+            // axis: horizontal line at y=100 (zero displacement)
+            ctx.beginPath();
+            ctx.strokeStyle = '#3c6e91';
+            ctx.lineWidth = 2;
+            ctx.moveTo(30, 100);
+            ctx.lineTo(width-20, 100);
+            ctx.stroke();
+
+            // time window: 0..12 rad (about two cycles)
+            const tStart = time - 10;   // show ~10 rad backwards
+            const tEnd = time + 2;       // a bit of future
+            const points = [];
+            const forcePoints = [];
+
+            const scaleX = (width - 60) / 12;    // 12 rad spans ~440px
+            const scaleY = 70;                    // amplitude scaling: 70px per unit displacement
+
+            // helper: displacement x(t) for undamped forced vibration: x = X·cos(ωt) + transient (if we want to be exact, but we show total)
+            // we also include homogeneous term to show beat if near resonance, but for simplicity we use full analytic:
+            // x(t) = [F0/(k-mω²)] cos(ωt) + A_h cos(ωₙ t + φ) – but we want steady state + transient? 
+            // We choose to show the particular solution only (steady state) because it's the "forced" response, 
+            // unless resonance then show diverging. But we can also simulate beat by adding small homogeneous.
+            // Here we display both: steady + small hom. (2% of amplitude) to illustrate near resonance.
+            // For clean undamped forced, let's use exact: if ω≠ωₙ, we have x = (F0/(k-mω²)) cos(ωt) + B cos(ωₙ t) 
+            // we set B = 0.3 * (F0/k) to show modulation; it's more didactic.
+            const homoAmp = 0.0; // we want clean forced response? but better to show beating if near resonance: set small B
+            // make B proportional to F0/k but small
+            const B = (F0 / k) * 0.25;  // small transient to see beating
+
+            for (let i = 0; i <= 180; i++) {
+                const t = tStart + (i / 180) * (tEnd - tStart);
+                let x;
+                if (isResonance || Math.abs(k - m*omega*omega) < 1e-7) {
+                    // resonance: particular solution t*(F0/(2mωₙ)) sin(ωₙ t) – simplified linear growth
+                    const wn = omegaN;
+                    const slope = F0/(2*m*wn);
+                    x = slope * t * Math.sin(wn * t) + 0.1*Math.cos(wn*t); // growing oscillation
+                } else {
+                    const X = F0 / (k - m*omega*omega); // signed
+                    // steady + tiny transient to visual beating (if near resonance)
+                    const wn = omegaN;
+                    x = X * Math.cos(omega * t) + B * Math.cos(wn * t + 0.7);
+                }
+                // scale and shift: y = 100 - x*scaleY (positive up)
+                const y = 100 - x * scaleY;
+                points.push({ x: 30 + (t - tStart) * scaleX, y: Math.min(height-10, Math.max(10, y)) });
+
+                // force line F(t) = F0 * cos(ω t) , scaled to fit (max force ~ 8N, use factor 6px per N)
+                const forceVal = F0 * Math.cos(omega * t);
+                const forceY = 150 - forceVal * 5;  // offset lower on canvas
+                forcePoints.push({ x: 30 + (t - tStart) * scaleX, y: Math.min(190, Math.max(40, forceY)) });
+            }
+
+            // draw force line (red)
+            ctx.beginPath();
+            ctx.strokeStyle = '#c3324b';
+            ctx.lineWidth = 2.2;
+            ctx.setLineDash([5, 3]);
+            ctx.moveTo(forcePoints[0].x, forcePoints[0].y);
+            for (let p of forcePoints.slice(1)) {
+                ctx.lineTo(p.x, p.y);
+            }
+            ctx.stroke();
+
+            // draw displacement line (blue)
+            ctx.beginPath();
+            ctx.strokeStyle = '#226688';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let p of points.slice(1)) {
+                ctx.lineTo(p.x, p.y);
+            }
+            ctx.stroke();
+
+            // draw small circle at current time
+            const currentX = 30 + (time - tStart) * scaleX;
+            const currentYdisp = 100 - (() => {
+                if (isResonance || Math.abs(k - m*omega*omega) < 1e-7) {
+                    const wn = omegaN;
+                    const slope = F0/(2*m*wn);
+                    return slope * time * Math.sin(wn * time) + 0.1*Math.cos(wn*time);
+                } else {
+                    const X = F0 / (k - m*omega*omega);
+                    const wn = omegaN;
+                    return X * Math.cos(omega * time) + B * Math.cos(wn * time + 0.7);
+                }
+            })() * scaleY;
+
+            ctx.beginPath();
+            ctx.fillStyle = '#0a3345';
+            ctx.arc(currentX, currentYdisp, 6, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.shadowColor = '#226688';ctx.shadowBlur=10;ctx.shadowOffsetY=2;
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            // mark force dot
+            const forceNow = F0 * Math.cos(omega * time);
+            const forceYnow = 150 - forceNow * 5;
+            ctx.beginPath();
+            ctx.fillStyle = '#b81b34';
+            ctx.arc(currentX, forceYnow, 5, 0, 2*Math.PI);
+            ctx.fill();
+        }
+
+        // animation loop
+        function animate() {
+            if (!paused) {
+                time += dt;
+                // wrap time to avoid extreme large numbers (keep bounded)
+                if (time > 50) time -= 40;
+            }
+            drawCanvas();
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // event listeners
+        function updateFromInputs() {
+            refreshResult();
+            // no time reset, just redraw
+        }
+
+        [massInp, stiffnessInp, forceAmpInp, omegaInp].forEach(inp => {
+            inp.addEventListener('input', updateFromInputs);
+        });
+
+        document.getElementById('playPauseBtn').addEventListener('click', function() {
+            paused = !paused;
+            this.innerText = paused ? '▶ play' : '⏸ pause';
+        });
+
+        document.getElementById('resetPhaseBtn').addEventListener('click', function() {
+            time = 0.0;
+            drawCanvas();
+        });
+
+        document.getElementById('snapToNatural').addEventListener('click', function() {
+            const m = parseFloat(massInp.value) || 2.4;
+            const k = parseFloat(stiffnessInp.value) || 18.5;
+            const omegaN = Math.sqrt(k / m);
+            omegaInp.value = omegaN.toFixed(3);
+            updateFromInputs();
+        });
+
+        // initial update
+        updateFromInputs();
+        drawCanvas();
+
+        // resize handler not needed (fixed canvas)
+    })();
+</script>
+</body>
+</html>
